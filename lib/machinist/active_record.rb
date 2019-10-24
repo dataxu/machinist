@@ -3,18 +3,18 @@ require 'machinist/blueprints'
 require 'active_record'
 
 module Machinist
-  
+
   class ActiveRecordAdapter
-    
+
     def self.has_association?(object, attribute)
       object.class.reflect_on_association(attribute)
     end
-    
+
     def self.class_for_association(object, attribute)
       association = object.class.reflect_on_association(attribute)
       association && association.klass
     end
-    
+
     # This method takes care of converting any associated objects,
     # in the hash returned by Lathe#assigned_attributes, into their
     # object ids.
@@ -33,26 +33,30 @@ module Machinist
       lathe.assigned_attributes.each_pair do |attribute, value|
         association = lathe.object.class.reflect_on_association(attribute)
         if association && association.macro == :belongs_to && !value.nil?
-          attributes[association.primary_key_name.to_sym] = value.id
+          if association.respond_to?(:foreign_key) # For Rails 3.1 and above
+            attributes[association.foreign_key.to_sym] = value.id
+          else
+            attributes[association.primary_key_name.to_sym] = value.id
+          end
         else
           attributes[attribute] = value
         end
       end
       attributes
     end
-    
+
   end
-    
+
   module ActiveRecordExtensions
     def self.included(base)
       base.extend(ClassMethods)
     end
-  
+
     module ClassMethods
       def make(*args, &block)
         lathe = Lathe.run(Machinist::ActiveRecordAdapter, self.new, *args)
         unless Machinist.nerfed?
-          lathe.object.save!
+          ActiveSupport::Deprecation.silence { lathe.object.save! }
           lathe.object.reload
         end
         lathe.object(&block)
@@ -63,19 +67,21 @@ module Machinist
         yield object if block_given?
         object
       end
-        
+
       def plan(*args)
         lathe = Lathe.run(Machinist::ActiveRecordAdapter, self.new, *args)
         Machinist::ActiveRecordAdapter.assigned_attributes_without_associations(lathe)
       end
     end
   end
-  
+
   module ActiveRecordHasManyExtensions
     def make(*args, &block)
       lathe = Lathe.run(Machinist::ActiveRecordAdapter, self.build, *args)
       unless Machinist.nerfed?
-        lathe.object.save!
+        Kernel.silence_warnings do
+          lathe.object.save!
+        end
         lathe.object.reload
       end
       lathe.object(&block)
