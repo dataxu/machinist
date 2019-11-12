@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "machinist"
-  s.version = "1.0.6"
+  s.version = "1.0.6.dataxu.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Pete Yandell"]
