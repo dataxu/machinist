@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.23"
   s.summary = "Fixtures aren't fun. Machinist is."
+  s.description = "manage fixures in ruby test code."
   s.test_files = ["spec/active_record_spec.rb", "spec/data_mapper_spec.rb", "spec/db/schema.rb", "spec/machinist_spec.rb", "spec/sequel_spec.rb", "spec/sham_spec.rb", "spec/spec_helper.rb"]
 
   if s.respond_to? :specification_version then
